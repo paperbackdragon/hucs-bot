@@ -29,6 +29,10 @@ port   = 6667
 chan   = "#tutbot-testing"
 nick   = "tutbot"
  
+ -- IRC Message type : To From Message
+data Msg = Msg String String String
+ 
+ 
 --
 -- The 'Net' monad, a wrapper over IO, carrying the bot's immutable state.
 -- A socket and the bot's start time.
@@ -81,18 +85,26 @@ listen h = forever $ do
     if ping s then pong s else eval (clean s)
   where
     forever a = a >> forever a
-    clean     = drop 1 . dropWhile (/= ':') . drop 1
+    --clean     = drop 1 . dropWhile (/= ':') . drop 1
     ping x    = "PING :" `isPrefixOf` x
     pong x    = write "PONG" (':' : drop 6 x)
+	
+	
+--msgfromstring :: String -> Msg
+--msgfromstring x = splitOn
+
  
 --
 -- Dispatch a command
 --
-eval :: String -> Net ()
-eval     "!uptime"             = uptime >>= privmsg
-eval     "!quit"               = write "QUIT" ":Exiting" >> io (exitWith ExitSuccess)
-eval x | "!id " `isPrefixOf` x = privmsg (drop 4 x)
+eval :: Msg -> Net ()
+eval  x y  "!uptime" = uptime >>= privmsg
+eval  x y z   "!quit"  = write "QUIT" ":Exiting" >> io (exitWith ExitSuccess)
+--eval x | "!id " `isPrefixOf` x = privmsg (drop 4 x)
 eval     _                     = return () -- ignore everything else
+
+--where
+  -- send a = if "!" `isPrefixOf` a then privateMessageThePerson else normal ;x
  
 --
 -- Send a privmsg to the current chan + server
